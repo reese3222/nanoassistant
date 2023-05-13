@@ -24,7 +24,6 @@ class VoiceAssistant:
     def __init__(self):
         # Set your OpenAI API key
         openai.api_key = ""
-
         # Initialize the assistant's history
         self.history = [
                 {"role": "system", "content": "You are a helpful assistant. The user is english. Only speak english."}
@@ -74,31 +73,28 @@ class VoiceAssistant:
         """"
         Converts text to speech and plays it.
         """
-        
         # Convert text to speech
         tts = gTTS(text=text, lang='en', slow=False)
 
-        # Save the audio to a temporary wav file
+        # Save the audio to a temporary wav file and then close it
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav_file:
             tts.save(temp_wav_file.name)
-            temp_wav_file.close()  # Close the temporary file to ensure it's properly written
 
-            # Read audio data with librosa
-            audio_data, sr = librosa.load(temp_wav_file.name, sr=None)
+        # Read audio data with librosa
+        audio_data, sample_rate = librosa.load(temp_wav_file.name, sr=None)
 
-            # Write audio data back to a temporary wav file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as fixed_wav_file:
-                sf.write(fixed_wav_file.name, audio_data, sr)
-                fixed_wav_file.close() 
+        # Write audio data back to the same wav file
+        sf.write(temp_wav_file.name, audio_data, sample_rate)
 
-                # Play the audio file
-                wave_obj = sa.WaveObject.from_wave_file(fixed_wav_file.name)
-                play_obj = wave_obj.play()
-                play_obj.wait_done()
+        # Play the audio file
+        wave_obj = sa.WaveObject.from_wave_file(temp_wav_file.name)
+        play_obj = wave_obj.play()
+        play_obj.wait_done()
 
-                # Remove the temporary wav files
-                os.remove(temp_wav_file.name)
-                os.remove(fixed_wav_file.name)
+        # Make sure we have finished with the file before we try to delete it
+        temp_wav_file.close()
+        os.remove(temp_wav_file.name)
+
 
 if __name__ == "__main__":
     assistant = VoiceAssistant()
