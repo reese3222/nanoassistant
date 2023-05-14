@@ -1,14 +1,9 @@
 import openai
-import os
-from gtts import gTTS
 import sounddevice as sd
 import numpy as np
 from scipy.io import wavfile
 import tempfile
-import simpleaudio as sa
-import librosa
-import soundfile as sf
-
+import pyttsx3
 class VoiceAssistant:
     """
     This class represents a voice assistant.
@@ -73,27 +68,14 @@ class VoiceAssistant:
         """"
         Converts text to speech and plays it.
         """
+        # Initialize the speech engine
+        engine = pyttsx3.init()
+
         # Convert text to speech
-        tts = gTTS(text=text, lang='en', slow=False)
+        engine.say(text)
 
-        # Save the audio to a temporary wav file and then close it
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav_file:
-            tts.save(temp_wav_file.name)
-
-        # Read audio data with librosa
-        audio_data, sample_rate = librosa.load(temp_wav_file.name, sr=None)
-
-        # Write audio data back to the same wav file
-        sf.write(temp_wav_file.name, audio_data, sample_rate)
-
-        # Play the audio file
-        wave_obj = sa.WaveObject.from_wave_file(temp_wav_file.name)
-        play_obj = wave_obj.play()
-        play_obj.wait_done()
-
-        # Make sure we have finished with the file before we try to delete it
-        temp_wav_file.close()
-        os.remove(temp_wav_file.name)
+        # Block while processing all currently queued commands
+        engine.runAndWait()
 
 
 if __name__ == "__main__":
